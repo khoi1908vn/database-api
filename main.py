@@ -1,3 +1,23 @@
+"""
+The server exposes four endpoints:
+
+/whitelist/user/check/{user_id} - GET endpoint that takes a user ID and returns a JSON object with a boolean flag indicating if the user is whitelisted.
+
+/whitelist/user/get - GET endpoint that returns a JSON object with a list of all whitelisted beta users.
+
+/whitelist/server/check/{guild_id} - GET endpoint that takes a server ID and returns a JSON object with a boolean flag indicating if the server is whitelisted.
+
+/whitelist/server/get - GET endpoint that returns a JSON object with a list of all whitelisted servers.
+
+The server also provides two PUT endpoints to modify the whitelist data:
+
+/whitelist/user/modify/{user_id} - PUT endpoint that takes a user ID and a boolean status flag indicating if the user should be added or removed from the whitelist.
+
+/whitelist/server/modify/{guild_id} - PUT endpoint that takes a server ID and a boolean status flag indicating if the server should be added or removed from the whitelist.
+
+All endpoints require an authorization header with an API key to ensure that only authorized users can access the server. If the authorization header is not present or contains an incorrect API key, the server returns a 401 Unauthorized error.
+"""
+
 from fastapi import FastAPI, HTTPException, Header
 from typing import Optional
 import os
@@ -22,8 +42,8 @@ def modify_whitelist(newdata: dict):
     with open("whitelist.json", "w") as f:
         json.dump(newdata, f)
 
-@app.get("/whitelist/user/get/{user_id}")
-async def get_whitelisted_user(user_id: int, authorization: Optional[str] = Header(None)):
+@app.get("/whitelist/user/check/{user_id}")
+async def check_wl_user(user_id: int, authorization: Optional[str] = Header(None)):
     if authorization != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
     whitelist = get_whitelist()
@@ -36,7 +56,14 @@ async def get_whitelisted_user(user_id: int, authorization: Optional[str] = Head
         response = {"success": success}
     return response
 
-@app.get("/whitelist/server/get/{guild_id}")
+@app.get("/whitelist/user/get")
+async def get_wl_user(authorization: Optional[str] = Header(None)):
+    if authorization != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    whitelist = get_whitelist()
+    return {"success": True, "whitelisted_beta_users": whitelist["whitelisted_beta_users"]}
+
+@app.get("/whitelist/server/check/{guild_id}")
 async def get_whitelisted_server(guild_id: int, authorization: Optional[str] = Header(None)):
     if authorization != API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -49,6 +76,13 @@ async def get_whitelisted_server(guild_id: int, authorization: Optional[str] = H
         success = False
         response = {"success": success}
     return response
+
+@app.get("/whitelist/server/get")
+async def get_wl_server(authorization: Optional[str] = Header(None)):
+    if authorization != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    whitelist = get_whitelist()
+    return {"success": True, "whitelisted_beta_users": whitelist["whitelisted_servers"]}
 
 @app.put("/whitelist/user/modify/{user_id}")
 async def modify_whitelisted_user(user_id: int, status: bool, authorization: Optional[str] = Header(None)):
