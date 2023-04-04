@@ -7,7 +7,7 @@ app = FastAPI()
 API_KEY = os.environ.get("allowed_key", "examplekey_")
 def check_for_files():
     if not os.path.exists("whitelist.json"):
-        with open("whitelist.json", "w") as f:
+        with open("whitelist.json", "w+") as f:
             data = {"whitelisted_beta_users": [], "whitelisted_servers": []}
             json.dump(data, f)
 
