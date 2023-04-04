@@ -42,6 +42,10 @@ def modify_whitelist(newdata: dict):
     with open("whitelist.json", "w") as f:
         json.dump(newdata, f)
 
+@app.get("/")
+async def root():
+    return {"root": "This is the root of the API."}
+
 @app.get("/whitelist/user/check/{user_id}")
 async def check_wl_user(user_id: int, authorization: Optional[str] = Header(None)):
     if authorization != API_KEY:
